@@ -10,7 +10,7 @@ import useThemeStyles from '@hooks/useThemeStyles';
 import getNonEmptyStringOnyxID from '@libs/getNonEmptyStringOnyxID';
 import Log from '@libs/Log';
 import Navigation from '@libs/Navigation/Navigation';
-import {isReportTransactionThread, isValidReportIDFromPath} from '@libs/ReportUtils';
+import {canCurrentUserOpenReport, isReportTransactionThread, isValidReportIDFromPath} from '@libs/ReportUtils';
 import {getParentReportActionDeletionStatus} from '@libs/TransactionNavigationUtils';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
@@ -44,13 +44,14 @@ function ReportNotFoundGuard({children}: ReportNotFoundGuardProps) {
     const [isLoadingApp] = useOnyx(ONYXKEYS.IS_LOADING_APP);
     const [deleteTransactionNavigateBackUrl] = useOnyx(ONYXKEYS.NVP_DELETE_TRANSACTION_NAVIGATE_BACK_URL);
 
+    const [betas] = useOnyx(ONYXKEYS.BETAS);
     const reportID = report?.reportID;
     const isOptimisticDelete = report?.statusNum === CONST.REPORT.STATUS_NUM.CLOSED;
     const isInvalidReportPath = !!routeParams?.reportID && !isValidReportIDFromPath(routeParams.reportID);
     const isLoading = isLoadingApp !== false || isLoadingReportData || (!isOffline && !!isLoadingInitialReportActions);
     const reportExists = !!reportID || isOptimisticDelete || userLeavingStatus;
 
-    const shouldShowNotFoundPage = !deleteTransactionNavigateBackUrl && (isInvalidReportPath || (!isLoading && !reportExists));
+    const shouldShowNotFoundPage = !deleteTransactionNavigateBackUrl && (isInvalidReportPath || (!isLoading && !reportExists) || (!isLoading && !!report && !canCurrentUserOpenReport(report, betas)));
 
     useEffect(() => {
         if (!shouldShowNotFoundPage) {

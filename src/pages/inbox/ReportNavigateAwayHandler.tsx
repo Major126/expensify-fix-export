@@ -88,6 +88,7 @@ function ReportNavigateAwayHandler() {
     const isCurrentRouteOwnWorkspaceChatRef = useIsOwnWorkspaceChatRef(report, reportIDFromRoute);
 
     const firstRender = useRef(true);
+    const wasReportRemovedRef = useRef(false);
 
     // Navigation action that reads non-reactive context (concierge params, modal state, etc.)
     const navigateAwayFromReport = useEffectEvent((prevOnyxReportID: string | undefined, prevParentReportID: string | undefined) => {
@@ -104,7 +105,7 @@ function ReportNavigateAwayHandler() {
             reportIDFromRoute === currentRoute.params.reportID;
         // Early return if the report we're passing isn't in a focused state. We only want to navigate to Concierge if the user leaves the room from another device or gets removed from the room while the report is in a focused state.
         // Prevent auto navigation for report in RHP
-        if ((!isFocused && !isHoldScreenOpenInRHP && !isReportDetailOpenInRHP) || (!isHoldScreenOpenInRHP && isInNarrowPaneModal)) {
+        if ((!isFocused && !isHoldScreenOpenInRHP && !isReportDetailOpenInRHP) || (!isHoldScreenOpenInRHP && isInNarrowPaneModal && !wasReportRemovedRef.current)) {
             return;
         }
         Navigation.dismissModal();
@@ -140,6 +141,7 @@ function ReportNavigateAwayHandler() {
         const onyxReportID = report?.reportID;
         const prevOnyxReportID = prevReport?.reportID;
         const wasReportRemoved = !!prevOnyxReportID && prevOnyxReportID === reportIDFromRoute && !onyxReportID;
+        wasReportRemovedRef.current = wasReportRemoved;
         const isRemovalExpectedForReportType =
             isEmpty(report) &&
             (isMoneyRequest(prevReport) ||
