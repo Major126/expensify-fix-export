@@ -1260,7 +1260,11 @@ function shouldReportActionBeVisible(reportAction: OnyxEntry<ReportAction>, key:
     // Hide REIMBURSED and MARKED_REIMBURSED actions created from NewDot since an IOU PAY action is displayed instead
     if (isActionOfType(reportAction, CONST.REPORT.ACTIONS.TYPE.REIMBURSED) || isActionOfType(reportAction, CONST.REPORT.ACTIONS.TYPE.MARKED_REIMBURSED)) {
         const originalMessage = getOriginalMessage(reportAction);
-        if (originalMessage?.isNewDot || reportAction.shouldShow === false) {
+        // OldDot manual reimbursements carry the admin comment in originalMessage.message.
+        // NewDot auto-test duplicates have no comment and rely on sibling IOU PAY action.
+        // We must preserve the OldDot action since it's the only carrier of the admin comment.
+        const hasAdminComment = !!(getOriginalMessage(reportAction) as OriginalMessageMarkedReimbursed | undefined)?.message?.trim();
+        if (originalMessage?.isNewDot || (reportAction.shouldShow === false && !hasAdminComment)) {
             return false;
         }
     }
